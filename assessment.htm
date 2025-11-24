@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UST | MuleSoft to Workato Migration Architect</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Mermaid for Diagrams -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        :root {
+            /* UST Branding Colors */
+            --ust-orange: #D6001C; /* UST Red/Orange Accent */
+            --ust-black: #000000;
+            --ust-grey: #666666;
+            --ust-light-grey: #f2f2f2;
+            
+            --bg: #f4f7fa;
+            --card: #ffffff;
+            --text: #333;
+            --border: #e0e6ed;
+            --success: #137333;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 380px;
+            background: white;
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--ust-black);
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: -0.5px;
+        }
+
+        .logo span { 
+            color: white; 
+            background: var(--ust-orange); 
+            padding: 2px 8px; 
+            border-radius: 4px;
+            font-size: 1.2rem;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            padding: 10px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.75rem;
+            resize: vertical;
+        }
+
+        label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--ust-grey);
+            margin-bottom: 5px;
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        button.primary-btn {
+            background: var(--ust-black);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        button.primary-btn:hover { background: var(--ust-orange); transform: translateY(-1px); }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: var(--card);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--ust-orange);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .stat-value { font-size: 2rem; font-weight: 700; color: var(--ust-black); }
+        .stat-label { color: #777; font-size: 0.8rem; margin-top: 5px; text-transform: uppercase; }
+
+        /* Detailed Analysis Section */
+        .analysis-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid var(--border);
+            min-height: 400px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 15px;
+        }
+        
+        .section-header h2, .section-header h3 { color: var(--ust-black); margin: 0; }
+
+        .flow-card {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        }
+
+        .flow-header {
+            padding: 15px;
+            background: #fcfcfc;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .flow-body {
+            padding: 15px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .mapping-step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        .mapping-step:hover { background: #f9f9f9; }
+
+        .icon { margin-right: 8px; width: 20px; text-align: center; }
+
+        /* Complexity Badges */
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+        .badge-s { background: #e6f4ea; color: #137333; }
+        .badge-m { background: #fef7e0; color: #b06000; }
+        .badge-l { background: #fce8e6; color: var(--ust-orange); }
+
+        /* Strategy Modal */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); display: none;
+            justify-content: center; align-items: center; z-index: 100;
+        }
+        .strategy-paper {
+            background: white; width: 90%; max-width: 1000px; height: 90vh; padding: 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border-radius: 8px; position: relative;
+            display: flex; flex-direction: column;
+            overflow: hidden;
+        }
+        .strategy-header { 
+            background: var(--ust-black); color: white; padding: 20px 30px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        
+        .strategy-content { flex: 1; overflow-y: auto; padding: 30px; }
+
+        .strategy-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 0.9rem; }
+        .strategy-table th { text-align: left; background: #f4f7fa; padding: 12px; color: var(--ust-black); border-bottom: 2px solid var(--ust-orange); }
+        .strategy-table td { padding: 12px; border-bottom: 1px solid #eee; vertical-align: top; }
+        
+        .rec-tag { 
+            display: inline-block; background: var(--ust-light-grey); color: #333; 
+            padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin-right: 5px; margin-bottom: 5px; border: 1px solid #ddd;
+        }
+
+        .btn-group { display: flex; gap: 10px; padding: 20px; border-top: 1px solid #eee; background: #fff; justify-content: flex-end;}
+        .btn-secondary { background: white; color: #333; padding: 10px 20px; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; }
+        .btn-action { background: var(--ust-orange); color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+
+        /* Diagram Container */
+        .diagram-box {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            background: #fafafa;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 150px;
+        }
+        
+        /* MUnit Section in Strategy */
+        .test-strategy-box {
+            background: #e8f0fe;
+            border-left: 4px solid #4285f4;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 0 4px 4px 0;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Input -->
+    <div class="sidebar">
+        <div class="logo"><span>UST</span> Migration Architect</div>
+        
+        <label>1. RAML Definition (API Spec)</label>
+        <textarea id="ramlInput" placeholder="Paste RAML definition...">#%RAML 1.0
+title: SAP Order Sync API
+version: v2
+protocols: [HTTPS]
+securedBy: [oauth_2_0]
+
+types:
+  Order:
+    properties:
+      orderId: string
+      items: array
+      total: number
+
+/orders:
+  post:
+    description: Syncs orders to SAP
+    body:
+      application/json:
+        type: Order
+    responses:
+      201:
+        body:
+          application/json:
+            example: {"status": "synced"}
+</textarea>
+
+        <label>2. Mule XML (Flow Logic)</label>
+        <textarea id="xmlInput" placeholder="Paste Mule XML Flow logic..."><flow name="syncOrdersToSAP">
+    <http:listener path="/orders" config-ref="HTTP_Config" />
+    <client-id-enforcement />
+    
+    <ee:transform>
+        <dw:set-payload>output application/json --- payload</dw:set-payload>
+    </ee:transform>
+
+    <flow-ref name="validateOrder" />
+
+    <foreach collection="#[payload.items]">
+        <db:insert config-ref="SAP_DB">
+            <db:sql>INSERT INTO Items...</db:sql>
+        </db:insert>
+    </foreach>
+
+    <error-handler>
+        <on-error-propagate>
+            <logger message="Sync Failed" level="ERROR" />
+        </on-error-propagate>
+    </error-handler>
+</flow>
+
+<flow name="validateOrder">
+    <choice>
+        <when expression="#[payload.total < 0]">
+            <raise-error type="ORDER:INVALID" />
+        </when>
+        <otherwise>
+            <logger message="Order Valid" />
+        </otherwise>
+    </choice>
+</flow></textarea>
+
+        <label>3. MUnit Tests (XML)</label>
+        <textarea id="munitInput" placeholder="Paste MUnit XML (Optional)..."><munit:test name="syncOrdersTest" description="Test happy path">
+    <munit:execution>
+        <flow-ref name="syncOrdersToSAP"/>
+    </munit:execution>
+    <munit:validation>
+        <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+    </munit:validation>
+</munit:test>
+<munit:test name="errorPathTest">
+    <munit-tools:mock-when processor="db:insert">
+        <munit-tools:then-return>
+            <munit-tools:error type="DB:CONNECTIVITY"/>
+        </munit-tools:then-return>
+    </munit-tools:mock-when>
+</munit:test>
+</textarea>
+
+        <button class="primary-btn" onclick="analyze()">
+            <span>🚀</span> Generate UST Assessment
+        </button>
+        
+        <div style="margin-top: auto; text-align: center; font-size: 0.7rem; color: #999; padding-top: 20px;">
+            Powered by UST Transformation Solutions
+        </div>
+    </div>
+
+    <!-- Main Report Area -->
+    <div class="main-content" id="reportArea" style="display:none;">
+        
+        <!-- Top Stats -->
+        <div class="section-header">
+            <div>
+                <h2>Migration Assessment Report</h2>
+                <div style="color: #666; font-size: 0.9rem;">Target: Workato Automation Platform</div>
+            </div>
+            <button class="btn-action" onclick="showStrategy()">📄 View Architecture Strategy & Visuals</button>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="statComplexity">-</div>
+                <div class="stat-label">Migration Effort</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statFlows">0</div>
+                <div class="stat-label">Recipes Required</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statTests">0</div>
+                <div class="stat-label">Test Scenarios</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statPoints">0</div>
+                <div class="stat-label">Logic Nodes</div>
+            </div>
+        </div>
+
+        <!-- Technical Analysis -->
+        <div class="analysis-section">
+            <div class="section-header">
+                <h3>Visual Migration Map</h3>
+                <span style="font-size: 0.85rem; color: #666;">Source vs Target Component Mapping</span>
+            </div>
+            <div id="flowContainer"></div>
+        </div>
+    </div>
+
+    <!-- Strategy Modal -->
+    <div class="modal-overlay" id="strategyModal">
+        <div class="strategy-paper">
+            <div class="strategy-header">
+                <div>
+                    <h2 style="margin:0; color:white;">Migration Strategy & Architecture</h2>
+                    <p style="color:#ccc; margin:5px 0 0 0; font-size: 0.9rem;">UST Technical Recommendation Report</p>
+                </div>
+                <div style="text-align:right;">
+                    <p style="margin:0;"><strong>Date:</strong> <span id="reportDate"></span></p>
+                    <div style="background:rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 4px; display:inline-block; margin-top:5px; font-size:0.8rem;">CONFIDENTIAL</div>
+                </div>
+            </div>
+
+            <div class="strategy-content">
+                
+                <!-- Architecture Diagram -->
+                <h3 style="color: var(--ust-black); border-bottom: 2px solid var(--ust-orange); padding-bottom: 10px;">Target Architecture Visual</h3>
+                <div class="diagram-box">
+                    <div class="mermaid" id="mermaidGraph">
+                        <!-- Diagram injected here -->
+                    </div>
+                </div>
+
+                <!-- MUnit Strategy -->
+                <div id="testStrategyContainer"></div>
+
+                <!-- Detailed Recommendations -->
+                <h3 style="margin-top: 30px; color: var(--ust-black); border-bottom: 2px solid var(--ust-orange); padding-bottom: 10px;">Component Recommendations</h3>
+                <table class="strategy-table">
+                    <thead>
+                        <tr>
+                            <th style="width:20%">Source Pattern</th>
+                            <th style="width:25%">Workato Capability</th>
+                            <th style="width:45%">Architecture Recommendation</th>
+                            <th style="width:10%">Risk</th>
+                        </tr>
+                    </thead>
+                    <tbody id="strategyBody">
+                        <!-- Injected via JS -->
+                    </tbody>
+                </table>
+
+            </div>
+
+            <div class="btn-group">
+                <button class="btn-secondary" onclick="closeStrategy()">Close</button>
+                <button class="btn-action" onclick="window.print()">🖨️ Print / PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Mermaid
+        mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
+
+        let globalAssessment = null;
+
+        function analyze() {
+            const raml = document.getElementById('ramlInput').value;
+            const xml = document.getElementById('xmlInput').value;
+            const munit = document.getElementById('munitInput').value;
+            
+            // 1. Parse RAML (Security & Types)
+            let ramlData = {};
+            try { ramlData = jsyaml.load(raml); } catch(e) {}
+
+            // 2. Parse XML (Logic)
+            const flows = extractFlows(xml);
+
+            // 3. Parse MUnit
+            const testAnalysis = extractMUnits(munit);
+
+            // 4. Calculate Metrics
+            const assessment = calculateAssessment(flows, ramlData, testAnalysis);
+            globalAssessment = assessment;
+
+            // 5. Render Report
+            renderReport(assessment);
+        }
+
+        function extractFlows(xmlText) {
+            const flows = [];
+            const flowRegex = /<flow.*?name=["'](.*?)["'].*?>([\s\S]*?)<\/flow>/gi;
+            let match;
+            
+            while ((match = flowRegex.exec(xmlText)) !== null) {
+                const name = match[1];
+                const content = match[2];
+                
+                const components = [];
+                const workatoSteps = [];
+                const strategies = [];
+                let points = 1; 
+
+                // --- MAPPING LOGIC ---
+
+                // Trigger
+                if (content.includes("http:listener")) {
+                    components.push({icon: "⚡", text: "HTTP Listener"});
+                    workatoSteps.push({icon: "⚡", text: "API Trigger"});
+                    strategies.push({
+                        source: "HTTP Listener", target: "API Recipe",
+                        rec: "Configure API Collection with schema validation matching RAML.",
+                        tags: ["API Platform"], risk: "Low"
+                    });
+                } else if (content.includes("scheduler")) {
+                    components.push({icon: "⏰", text: "Scheduler"});
+                    workatoSteps.push({icon: "⏰", text: "Scheduled Trigger"});
+                    strategies.push({ source: "Poll", target: "Schedule", rec: "Use standard interval trigger.", tags: ["Batch"], risk: "Low" });
+                }
+
+                // Processors
+                if (content.includes("transform") || content.includes("ee:")) {
+                    components.push({icon: "🔧", text: "DataWeave"});
+                    workatoSteps.push({icon: "📝", text: "Formula / SQL"});
+                    strategies.push({
+                        source: "Transformation", target: "Formula Mode",
+                        rec: "Convert DataWeave map/reduce logic to Workato Ruby formulas or SQL transformations for heavy payloads.",
+                        tags: ["Data"], risk: "Med"
+                    });
+                    points += 2;
+                }
+
+                if (content.includes("db:")) {
+                    components.push({icon: "🗄️", text: "Database"});
+                    workatoSteps.push({icon: "🔌", text: "SQL Action"});
+                    strategies.push({ source: "DB Connector", target: "JDBC Connector", rec: "Ensure OPA (On-Prem Agent) is deployed if DB is behind firewall.", tags: ["Connectivity"], risk: "High" });
+                    points += 2;
+                }
+
+                if (content.includes("foreach")) {
+                    components.push({icon: "🔄", text: "For Each"});
+                    workatoSteps.push({icon: "🔁", text: "Repeat / Batch"});
+                    strategies.push({ source: "Loop", target: "Repeat Action", rec: "Use Repeat for small lists. For >10k items, switch to Bulk triggers.", tags: ["Optimization"], risk: "Med" });
+                    points += 3;
+                }
+
+                if (content.includes("choice")) {
+                    components.push({icon: "🔀", text: "Choice"});
+                    workatoSteps.push({icon: "❓", text: "IF/ELSE"});
+                    strategies.push({ source: "Choice Router", target: "IF/ELSE", rec: "Implement standard conditional logic blocks.", tags: ["Logic"], risk: "Low" });
+                    points += 2;
+                }
+
+                if (content.includes("flow-ref")) {
+                    components.push({icon: "🔗", text: "Flow Ref"});
+                    workatoSteps.push({icon: "📞", text: "Callable Recipe"});
+                    strategies.push({ source: "Flow Ref", target: "Callable Recipe", rec: "Decouple logic into reusable utility recipes.", tags: ["Modular"], risk: "Low" });
+                    points += 1;
+                }
+                
+                if (content.includes("error-handler")) {
+                    components.push({icon: "⚠️", text: "Error Handler"});
+                    workatoSteps.push({icon: "🛡️", text: "Monitor/Rescue"});
+                    strategies.push({ source: "Error Scope", target: "Monitor Block", rec: "Wrap logic in Monitor. In Rescue, call Error Notification recipe.", tags: ["Resilience"], risk: "Med" });
+                    points += 2;
+                }
+
+                let size = points > 10 ? "L" : points > 5 ? "M" : "S";
+
+                flows.push({ name, components, workatoSteps, strategies, complexity: size, points });
+            }
+            return flows;
+        }
+
+        function extractMUnits(xmlText) {
+            const testCount = (xmlText.match(/<munit:test/g) || []).length;
+            const mockCount = (xmlText.match(/mock-when/g) || []).length;
+            const validationCount = (xmlText.match(/validation/g) || []).length;
+
+            return { count: testCount, mocks: mockCount, validations: validationCount };
+        }
+
+        function calculateAssessment(flows, raml, tests) {
+            let totalPoints = 0;
+            flows.forEach(f => totalPoints += f.points);
+
+            let overallSize = totalPoints > 20 ? "Large" : totalPoints > 8 ? "Medium" : "Small";
+
+            return { flows, tests, overallSize, totalPoints };
+        }
+
+        function renderReport(data) {
+            document.getElementById('reportArea').style.display = "block";
+            
+            // Stats
+            document.getElementById('statComplexity').innerText = data.overallSize;
+            document.getElementById('statFlows').innerText = data.flows.length;
+            document.getElementById('statTests').innerText = data.tests.count;
+            document.getElementById('statPoints').innerText = data.totalPoints;
+
+            // Flows
+            const container = document.getElementById('flowContainer');
+            container.innerHTML = "";
+
+            data.flows.forEach(flow => {
+                let badgeColor = flow.complexity === 'S' ? 'badge-s' : flow.complexity === 'M' ? 'badge-m' : 'badge-l';
+                
+                let html = `
+                <div class="flow-card">
+                    <div class="flow-header">
+                        <strong style="font-size:1rem;">${flow.name}</strong>
+                        <span class="badge ${badgeColor}">${flow.complexity}</span>
+                    </div>
+                    <div class="flow-body">
+                        <div class="mapping-col">
+                            <div style="font-size:0.8rem; color:#888; margin-bottom:10px;">MULESOFT SOURCE</div>
+                            ${flow.components.map(c => `<div class="mapping-step"><span class="icon">${c.icon}</span> ${c.text}</div>`).join('')}
+                        </div>
+                        <div class="mapping-col" style="border-left: 1px dashed #ccc; padding-left:20px;">
+                            <div style="font-size:0.8rem; color:var(--ust-orange); margin-bottom:10px; font-weight:bold;">WORKATO TARGET</div>
+                            ${flow.workatoSteps.map(s => `<div class="mapping-step"><span class="icon">${s.icon}</span> ${s.text}</div>`).join('')}
+                        </div>
+                    </div>
+                </div>`;
+                container.innerHTML += html;
+            });
+        }
+
+        async function showStrategy() {
+            if(!globalAssessment) return;
+            
+            // FIX: Show modal FIRST so Mermaid can calculate dimensions
+            document.getElementById('strategyModal').style.display = "flex";
+
+            const date = new Date().toLocaleDateString();
+            document.getElementById('reportDate').innerText = date;
+            
+            // 1. Render MUnit Strategy
+            const testBox = document.getElementById('testStrategyContainer');
+            if (globalAssessment.tests.count > 0) {
+                testBox.innerHTML = `
+                    <div class="test-strategy-box">
+                        <h4 style="margin-top:0; color:#1a73e8;">🧪 Test Automation Strategy</h4>
+                        <p style="font-size:0.9rem; margin-bottom:10px;">Detected <strong>${globalAssessment.tests.count} MUnit test scenarios</strong> with ${globalAssessment.tests.mocks} mocks.</p>
+                        <ul style="font-size:0.9rem; padding-left:20px; margin-bottom:0;">
+                            <li><strong>Recipe Lifecycle Management (RLM):</strong> Utilize Workato RLM to create manifest-based deployments.</li>
+                            <li><strong>Mocking:</strong> Replicate MUnit 'mock-when' behavior by using conditional flags (<code>isTest=true</code>) or mocking endpoints in Workato API Platform.</li>
+                            <li><strong>Validation:</strong> Convert MUnit assertions into Post-Processing recipes that verify output data integrity.</li>
+                        </ul>
+                    </div>
+                `;
+            } else {
+                testBox.innerHTML = "";
+            }
+
+            // 2. Generate Mermaid Diagram Logic
+            let mermaidStr = "graph TD;\n";
+            
+            // Add Nodes
+            globalAssessment.flows.forEach((flow, index) => {
+                // FIX: Ensure safe ID that doesn't start with a number
+                const safeName = 'flow_' + flow.name.replace(/[^a-zA-Z0-9]/g, '');
+                mermaidStr += `  ${safeName}[Recipe: ${flow.name}]:::recipe\n`;
+                
+                // Analyze connections based on components
+                if(flow.components.some(c => c.text.includes("HTTP"))) {
+                    mermaidStr += `  Client(External App) -->|API Request| ${safeName}\n`;
+                }
+                if(flow.components.some(c => c.text.includes("Scheduler"))) {
+                    mermaidStr += `  Clock(Scheduler) -.->|Trigger| ${safeName}\n`;
+                }
+                if(flow.components.some(c => c.text.includes("Database"))) {
+                    mermaidStr += `  ${safeName} -->|SQL| DB[(Database)]\n`;
+                }
+                if(flow.components.some(c => c.text.includes("Flow Ref"))) {
+                    mermaidStr += `  ${safeName} -->|Call| SubRecipe(Utility Recipe)\n`;
+                }
+                if(flow.components.some(c => c.text.includes("Salesforce"))) {
+                    mermaidStr += `  ${safeName} -->|Sync| SFDC(Salesforce)\n`;
+                }
+            });
+            
+            // Add Styling
+            mermaidStr += `  classDef recipe fill:#f9f9f9,stroke:#D6001C,stroke-width:2px;\n`;
+
+            const graphDiv = document.getElementById('mermaidGraph');
+            graphDiv.innerHTML = mermaidStr;
+            graphDiv.removeAttribute('data-processed'); // Reset mermaid
+            
+            try {
+                await mermaid.run({ nodes: [graphDiv] });
+            } catch (err) {
+                console.warn("Mermaid rendering failed:", err);
+                graphDiv.innerHTML = "<p style='color:red; text-align:center; padding:20px;'>Visual generation failed. Please check flow names for special characters.</p>";
+            }
+
+            // 3. Populate Table
+            const tbody = document.getElementById('strategyBody');
+            tbody.innerHTML = "";
+
+            globalAssessment.flows.forEach(flow => {
+                flow.strategies.forEach(strat => {
+                    let riskColor = strat.risk === 'High' ? '#fce8e6' : strat.risk === 'Med' ? '#fef7e0' : '#e6f4ea';
+                    let tagsHtml = strat.tags.map(t => `<span class="rec-tag">${t}</span>`).join('');
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><strong>${strat.source}</strong><br><span style="font-size:0.8rem; color:#888;">in ${flow.name}</span></td>
+                            <td>${strat.target}</td>
+                            <td>${tagsHtml}<br>${strat.rec}</td>
+                            <td><span style="background:${riskColor}; padding:2px 6px; border-radius:4px; font-size:0.8rem;">${strat.risk}</span></td>
+                        </tr>
+                    `;
+                });
+            });
+
+            // Modal is already visible from step 1
+        }
+
+        function closeStrategy() {
+            document.getElementById('strategyModal').style.display = "none";
+        }
+    </script>
+</body>
+</html>
