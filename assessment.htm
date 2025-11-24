@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UST | MuleSoft to Workato Migration Architect</title>
+    <title>UST | Example Assessment - MuleSoft to Workato</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <!-- Mermaid for Diagrams -->
@@ -11,7 +11,7 @@
     <style>
         :root {
             /* UST Branding Colors */
-            --ust-orange: #D6001C; /* UST Red/Orange Accent */
+            --ust-orange: #D6001C; 
             --ust-black: #000000;
             --ust-grey: #666666;
             --ust-light-grey: #f2f2f2;
@@ -21,6 +21,8 @@
             --text: #333;
             --border: #e0e6ed;
             --success: #137333;
+            --danger: #c5221f;
+            --warning: #b06000;
         }
 
         * { box-sizing: border-box; }
@@ -50,7 +52,7 @@
         }
 
         .logo {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: 800;
             color: var(--ust-black);
             margin-bottom: 25px;
@@ -58,14 +60,12 @@
             align-items: center;
             gap: 10px;
             letter-spacing: -0.5px;
+            border-bottom: 2px solid var(--ust-orange);
+            padding-bottom: 15px;
         }
 
         .logo span { 
-            color: white; 
-            background: var(--ust-orange); 
-            padding: 2px 8px; 
-            border-radius: 4px;
-            font-size: 1.2rem;
+            color: var(--ust-orange);
         }
 
         textarea {
@@ -121,7 +121,7 @@
         /* Dashboard Grid */
         .dashboard-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 20px;
         }
 
@@ -136,8 +136,24 @@
             justify-content: space-between;
         }
 
-        .stat-value { font-size: 2rem; font-weight: 700; color: var(--ust-black); }
+        .stat-value { font-size: 1.8rem; font-weight: 700; color: var(--ust-black); }
         .stat-label { color: #777; font-size: 0.8rem; margin-top: 5px; text-transform: uppercase; }
+        
+        .effort-breakdown {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .effort-pill {
+            background: #f4f7fa;
+            padding: 5px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: #555;
+            flex: 1;
+            text-align: center;
+        }
+        .effort-pill strong { display: block; color: var(--ust-black); font-size: 0.9rem; }
 
         /* Detailed Analysis Section */
         .analysis-section {
@@ -157,7 +173,7 @@
             padding-bottom: 15px;
         }
         
-        .section-header h2, .section-header h3 { color: var(--ust-black); margin: 0; }
+        .section-header h2 { color: var(--ust-black); margin: 0; font-size: 1.8rem; }
 
         .flow-card {
             background: #fff;
@@ -196,11 +212,16 @@
 
         .icon { margin-right: 8px; width: 20px; text-align: center; }
 
-        /* Complexity Badges */
+        /* Badges */
         .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
-        .badge-s { background: #e6f4ea; color: #137333; }
-        .badge-m { background: #fef7e0; color: #b06000; }
-        .badge-l { background: #fce8e6; color: var(--ust-orange); }
+        .badge-s { background: #e6f4ea; color: var(--success); }
+        .badge-m { background: #fef7e0; color: var(--warning); }
+        .badge-l { background: #fce8e6; color: var(--danger); }
+        
+        .pii-badge { 
+            background: #fce8e6; color: var(--danger); border: 1px solid #fad2cf; 
+            padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 8px;
+        }
 
         /* Strategy Modal */
         .modal-overlay {
@@ -209,7 +230,7 @@
             justify-content: center; align-items: center; z-index: 100;
         }
         .strategy-paper {
-            background: white; width: 90%; max-width: 1000px; height: 90vh; padding: 0;
+            background: white; width: 90%; max-width: 1100px; height: 90vh; padding: 0;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             border-radius: 8px; position: relative;
             display: flex; flex-direction: column;
@@ -218,6 +239,7 @@
         .strategy-header { 
             background: var(--ust-black); color: white; padding: 20px 30px;
             display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 4px solid var(--ust-orange);
         }
         
         .strategy-content { flex: 1; overflow-y: auto; padding: 30px; }
@@ -226,6 +248,9 @@
         .strategy-table th { text-align: left; background: #f4f7fa; padding: 12px; color: var(--ust-black); border-bottom: 2px solid var(--ust-orange); }
         .strategy-table td { padding: 12px; border-bottom: 1px solid #eee; vertical-align: top; }
         
+        .est-table th { background: var(--ust-black); color: white; border-bottom: none; }
+        .est-table tr:last-child { font-weight: bold; background: #f9f9f9; }
+
         .rec-tag { 
             display: inline-block; background: var(--ust-light-grey); color: #333; 
             padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin-right: 5px; margin-bottom: 5px; border: 1px solid #ddd;
@@ -247,13 +272,21 @@
             min-height: 150px;
         }
         
-        /* MUnit Section in Strategy */
+        /* Boxes */
         .test-strategy-box {
             background: #e8f0fe;
             border-left: 4px solid #4285f4;
             padding: 15px;
             margin-top: 20px;
             border-radius: 0 4px 4px 0;
+        }
+        
+        .pii-warning-box {
+            background: #fff8f8; border-left: 4px solid var(--danger); padding: 15px; margin-bottom: 20px;
+        }
+        
+        .platform-rec-box {
+            background: #f0f9f4; border-left: 4px solid var(--success); padding: 15px; margin-bottom: 20px;
         }
 
     </style>
@@ -262,7 +295,7 @@
 
     <!-- Sidebar Input -->
     <div class="sidebar">
-        <div class="logo"><span>UST</span> Migration Architect</div>
+        <div class="logo"><span>UST</span> &nbsp;Example Assessment</div>
         
         <label>1. RAML Definition (API Spec)</label>
         <textarea id="ramlInput" placeholder="Paste RAML definition...">#%RAML 1.0
@@ -277,18 +310,8 @@ types:
       orderId: string
       items: array
       total: number
-
-/orders:
-  post:
-    description: Syncs orders to SAP
-    body:
-      application/json:
-        type: Order
-    responses:
-      201:
-        body:
-          application/json:
-            example: {"status": "synced"}
+      customerEmail: string
+      creditCardToken: string
 </textarea>
 
         <label>2. Mule XML (Flow Logic)</label>
@@ -301,12 +324,20 @@ types:
     </ee:transform>
 
     <flow-ref name="validateOrder" />
-
-    <foreach collection="#[payload.items]">
-        <db:insert config-ref="SAP_DB">
-            <db:sql>INSERT INTO Items...</db:sql>
-        </db:insert>
-    </foreach>
+    
+    <!-- Complex Pattern: Scatter Gather logic -->
+    <scatter-gather doc:name="Scatter-Gather">
+        <route>
+            <vm:publish queueName="auditLog" />
+        </route>
+        <route>
+            <foreach collection="#[payload.items]">
+                <db:insert config-ref="SAP_DB">
+                    <db:sql>INSERT INTO Items...</db:sql>
+                </db:insert>
+            </foreach>
+        </route>
+    </scatter-gather>
 
     <error-handler>
         <on-error-propagate>
@@ -335,17 +366,10 @@ types:
         <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
     </munit:validation>
 </munit:test>
-<munit:test name="errorPathTest">
-    <munit-tools:mock-when processor="db:insert">
-        <munit-tools:then-return>
-            <munit-tools:error type="DB:CONNECTIVITY"/>
-        </munit-tools:then-return>
-    </munit-tools:mock-when>
-</munit:test>
 </textarea>
 
         <button class="primary-btn" onclick="analyze()">
-            <span>🚀</span> Generate UST Assessment
+            <span>🚀</span> Generate Assessment
         </button>
         
         <div style="margin-top: auto; text-align: center; font-size: 0.7rem; color: #999; padding-top: 20px;">
@@ -359,28 +383,41 @@ types:
         <!-- Top Stats -->
         <div class="section-header">
             <div>
-                <h2>Migration Assessment Report</h2>
+                <h2>Example Assessment Report</h2>
                 <div style="color: #666; font-size: 0.9rem;">Target: Workato Automation Platform</div>
             </div>
-            <button class="btn-action" onclick="showStrategy()">📄 View Architecture Strategy & Visuals</button>
+            <button class="btn-action" onclick="showStrategy()">📄 View Full Estimation & Strategy</button>
         </div>
 
         <div class="dashboard-grid">
+            <!-- Complexity & Estimates -->
             <div class="stat-card">
-                <div class="stat-value" id="statComplexity">-</div>
-                <div class="stat-label">Migration Effort</div>
+                <div class="stat-label">Total Estimated Effort</div>
+                <div class="stat-value" id="statTotalDays">0 Days</div>
+                <div class="effort-breakdown">
+                    <div class="effort-pill"><strong id="statDesign">0</strong>Design</div>
+                    <div class="effort-pill"><strong id="statDev">0</strong>Dev</div>
+                    <div class="effort-pill"><strong id="statTest">0</strong>Test</div>
+                </div>
             </div>
+
+            <!-- MuleSoft Complexity Score -->
+            <div class="stat-card">
+                <div class="stat-value" id="statMuleScore">0</div>
+                <div class="stat-label">Mule Complexity Score</div>
+                <div style="font-size: 0.75rem; color: #666; margin-top: 5px;">Based on components & logic density</div>
+            </div>
+
+            <!-- PII / Data -->
+            <div class="stat-card" id="piiCard">
+                <div class="stat-value" id="statPII">Low Risk</div>
+                <div class="stat-label">Data Privacy / PII</div>
+                <div style="font-size: 0.8rem; color: #666; margin-top: 5px;" id="statPIIDetails">No PII keywords detected</div>
+            </div>
+            
             <div class="stat-card">
                 <div class="stat-value" id="statFlows">0</div>
                 <div class="stat-label">Recipes Required</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="statTests">0</div>
-                <div class="stat-label">Test Scenarios</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="statPoints">0</div>
-                <div class="stat-label">Logic Nodes</div>
             </div>
         </div>
 
@@ -399,7 +436,7 @@ types:
         <div class="strategy-paper">
             <div class="strategy-header">
                 <div>
-                    <h2 style="margin:0; color:white;">Migration Strategy & Architecture</h2>
+                    <h2 style="margin:0; color:white;">Migration Strategy & Estimation</h2>
                     <p style="color:#ccc; margin:5px 0 0 0; font-size: 0.9rem;">UST Technical Recommendation Report</p>
                 </div>
                 <div style="text-align:right;">
@@ -410,6 +447,30 @@ types:
 
             <div class="strategy-content">
                 
+                <!-- PII Warning -->
+                <div id="modalPIIBox"></div>
+                
+                <!-- Platform Recommendations -->
+                <div id="platformRecsBox"></div>
+
+                <!-- Effort Estimation Table -->
+                 <h3 style="color: var(--ust-black); border-bottom: 2px solid var(--ust-orange); padding-bottom: 10px;">Project Estimation Breakdown (Days)</h3>
+                 <table class="strategy-table est-table">
+                    <thead>
+                        <tr>
+                            <th>Recipe Scope</th>
+                            <th>Mule Complexity</th>
+                            <th>Design</th>
+                            <th>Develop</th>
+                            <th>Test / QA</th>
+                            <th>Total Days</th>
+                        </tr>
+                    </thead>
+                    <tbody id="estimationBody">
+                        <!-- Injected via JS -->
+                    </tbody>
+                 </table>
+
                 <!-- Architecture Diagram -->
                 <h3 style="color: var(--ust-black); border-bottom: 2px solid var(--ust-orange); padding-bottom: 10px;">Target Architecture Visual</h3>
                 <div class="diagram-box">
@@ -422,7 +483,7 @@ types:
                 <div id="testStrategyContainer"></div>
 
                 <!-- Detailed Recommendations -->
-                <h3 style="margin-top: 30px; color: var(--ust-black); border-bottom: 2px solid var(--ust-orange); padding-bottom: 10px;">Component Recommendations</h3>
+                <h3 style="margin-top: 30px; color: var(--ust-black); border-bottom: 2px solid var(--ust-orange); padding-bottom: 10px;">Technical Migration Recommendations</h3>
                 <table class="strategy-table">
                     <thead>
                         <tr>
@@ -452,26 +513,50 @@ types:
 
         let globalAssessment = null;
 
+        // --- PII Detection Logic ---
+        const PII_KEYWORDS = ['email', 'ssn', 'socialsecurity', 'creditcard', 'cardnumber', 'dob', 'birth', 'salary', 'password', 'secret', 'token', 'passport'];
+
+        function detectPII(ramlData, xmlText) {
+            const detected = new Set();
+            
+            // 1. Scan RAML Types
+            if (ramlData && ramlData.types) {
+                JSON.stringify(ramlData.types, (key, value) => {
+                    if (typeof key === 'string') {
+                        PII_KEYWORDS.forEach(k => {
+                            if (key.toLowerCase().includes(k)) detected.add(k);
+                        });
+                    }
+                    return value;
+                });
+            }
+
+            // 2. Scan XML Logic
+            PII_KEYWORDS.forEach(k => {
+                if (xmlText.toLowerCase().includes(k)) detected.add(k);
+            });
+
+            return Array.from(detected);
+        }
+
         function analyze() {
             const raml = document.getElementById('ramlInput').value;
             const xml = document.getElementById('xmlInput').value;
             const munit = document.getElementById('munitInput').value;
             
-            // 1. Parse RAML (Security & Types)
+            // 1. Parse Inputs
             let ramlData = {};
             try { ramlData = jsyaml.load(raml); } catch(e) {}
-
-            // 2. Parse XML (Logic)
+            
             const flows = extractFlows(xml);
-
-            // 3. Parse MUnit
+            const piiFound = detectPII(ramlData, xml);
             const testAnalysis = extractMUnits(munit);
 
-            // 4. Calculate Metrics
-            const assessment = calculateAssessment(flows, ramlData, testAnalysis);
+            // 2. Calculate Metrics
+            const assessment = calculateAssessment(flows, ramlData, testAnalysis, piiFound);
             globalAssessment = assessment;
 
-            // 5. Render Report
+            // 3. Render
             renderReport(assessment);
         }
 
@@ -487,73 +572,87 @@ types:
                 const components = [];
                 const workatoSteps = [];
                 const strategies = [];
-                let points = 1; 
+                let points = 1; // Base complexity
 
-                // --- MAPPING LOGIC ---
+                // --- COMPONENT DETECTION ---
 
-                // Trigger
+                // 1. API & Listeners
                 if (content.includes("http:listener")) {
                     components.push({icon: "⚡", text: "HTTP Listener"});
                     workatoSteps.push({icon: "⚡", text: "API Trigger"});
                     strategies.push({
-                        source: "HTTP Listener", target: "API Recipe",
-                        rec: "Configure API Collection with schema validation matching RAML.",
+                        source: "HTTP Listener", target: "API Platform",
+                        rec: "Use Workato API Platform. Define Endpoint, Output Schema, and enforcement policies.",
                         tags: ["API Platform"], risk: "Low"
                     });
-                } else if (content.includes("scheduler")) {
+                } 
+                
+                // 2. Scheduling
+                if (content.includes("scheduler") || content.includes("poll")) {
                     components.push({icon: "⏰", text: "Scheduler"});
                     workatoSteps.push({icon: "⏰", text: "Scheduled Trigger"});
                     strategies.push({ source: "Poll", target: "Schedule", rec: "Use standard interval trigger.", tags: ["Batch"], risk: "Low" });
                 }
 
-                // Processors
-                if (content.includes("transform") || content.includes("ee:")) {
+                // 3. Transformation
+                if (content.includes("transform") || content.includes("ee:transform")) {
                     components.push({icon: "🔧", text: "DataWeave"});
                     workatoSteps.push({icon: "📝", text: "Formula / SQL"});
                     strategies.push({
-                        source: "Transformation", target: "Formula Mode",
-                        rec: "Convert DataWeave map/reduce logic to Workato Ruby formulas or SQL transformations for heavy payloads.",
-                        tags: ["Data"], risk: "Med"
+                        source: "DataWeave", target: "Formula Mode",
+                        rec: "Convert logic to Workato Formulas. Use SQL Transformation for heavy array joins.",
+                        tags: ["Transformation"], risk: "Med"
                     });
                     points += 2;
                 }
 
-                if (content.includes("db:")) {
+                // 4. Database
+                if (content.includes("db:") || content.includes("database")) {
                     components.push({icon: "🗄️", text: "Database"});
-                    workatoSteps.push({icon: "🔌", text: "SQL Action"});
-                    strategies.push({ source: "DB Connector", target: "JDBC Connector", rec: "Ensure OPA (On-Prem Agent) is deployed if DB is behind firewall.", tags: ["Connectivity"], risk: "High" });
+                    workatoSteps.push({icon: "🔌", text: "SQL Connector"});
+                    strategies.push({ source: "DB Connector", target: "JDBC Connector", rec: "Requires On-Prem Agent (OPA) if behind firewall.", tags: ["Connectivity"], risk: "High" });
                     points += 2;
                 }
 
+                // 5. Looping & Batch
                 if (content.includes("foreach")) {
                     components.push({icon: "🔄", text: "For Each"});
-                    workatoSteps.push({icon: "🔁", text: "Repeat / Batch"});
-                    strategies.push({ source: "Loop", target: "Repeat Action", rec: "Use Repeat for small lists. For >10k items, switch to Bulk triggers.", tags: ["Optimization"], risk: "Med" });
+                    workatoSteps.push({icon: "🔁", text: "Repeat Loop"});
+                    strategies.push({ source: "Foreach", target: "Repeat Action", rec: "Use Repeat for <10k items. Use Batch/Bulk triggers for larger sets.", tags: ["Optimization"], risk: "Med" });
                     points += 3;
                 }
-
+                
+                // 6. Advanced Routing (Scatter-Gather / Choice)
+                if (content.includes("scatter-gather")) {
+                    components.push({icon: "⚡", text: "Scatter-Gather"});
+                    workatoSteps.push({icon: "⚡", text: "Parallel / Async"});
+                    strategies.push({ source: "Scatter-Gather", target: "Async Call", rec: "Use 'Call Recipe (Async)' to simulate parallel processing.", tags: ["Advanced"], risk: "High" });
+                    points += 5;
+                }
                 if (content.includes("choice")) {
                     components.push({icon: "🔀", text: "Choice"});
                     workatoSteps.push({icon: "❓", text: "IF/ELSE"});
-                    strategies.push({ source: "Choice Router", target: "IF/ELSE", rec: "Implement standard conditional logic blocks.", tags: ["Logic"], risk: "Low" });
+                    strategies.push({ source: "Choice", target: "IF/ELSE", rec: "Standard conditional blocks.", tags: ["Logic"], risk: "Low" });
                     points += 2;
                 }
 
-                if (content.includes("flow-ref")) {
-                    components.push({icon: "🔗", text: "Flow Ref"});
-                    workatoSteps.push({icon: "📞", text: "Callable Recipe"});
-                    strategies.push({ source: "Flow Ref", target: "Callable Recipe", rec: "Decouple logic into reusable utility recipes.", tags: ["Modular"], risk: "Low" });
-                    points += 1;
+                // 7. Messaging / Queues
+                if (content.includes("vm:") || content.includes("jms:") || content.includes("anypoint-mq")) {
+                    components.push({icon: "📨", text: "Queue/VM"});
+                    workatoSteps.push({icon: "📨", text: "Pub/Sub"});
+                    strategies.push({ source: "VM/JMS", target: "Pub/Sub", rec: "Replace internal queues with Workato Pub/Sub topics for decoupling.", tags: ["Messaging"], risk: "Med" });
+                    points += 3;
                 }
-                
-                if (content.includes("error-handler")) {
+
+                // 8. Error Handling
+                if (content.includes("error-handler") || content.includes("on-error")) {
                     components.push({icon: "⚠️", text: "Error Handler"});
                     workatoSteps.push({icon: "🛡️", text: "Monitor/Rescue"});
-                    strategies.push({ source: "Error Scope", target: "Monitor Block", rec: "Wrap logic in Monitor. In Rescue, call Error Notification recipe.", tags: ["Resilience"], risk: "Med" });
+                    strategies.push({ source: "Error Scope", target: "Monitor Block", rec: "Wrap logic in Monitor. In Rescue, call centralized Notification recipe.", tags: ["Resilience"], risk: "Med" });
                     points += 2;
                 }
 
-                let size = points > 10 ? "L" : points > 5 ? "M" : "S";
+                let size = points > 12 ? "High" : points > 6 ? "Medium" : "Low";
 
                 flows.push({ name, components, workatoSteps, strategies, complexity: size, points });
             }
@@ -562,42 +661,86 @@ types:
 
         function extractMUnits(xmlText) {
             const testCount = (xmlText.match(/<munit:test/g) || []).length;
-            const mockCount = (xmlText.match(/mock-when/g) || []).length;
-            const validationCount = (xmlText.match(/validation/g) || []).length;
-
-            return { count: testCount, mocks: mockCount, validations: validationCount };
+            return { count: testCount };
         }
 
-        function calculateAssessment(flows, raml, tests) {
+        function calculateAssessment(flows, raml, tests, pii) {
             let totalPoints = 0;
-            flows.forEach(f => totalPoints += f.points);
+            let designDays = 0;
+            let devDays = 0;
+            let testDays = 0;
 
-            let overallSize = totalPoints > 20 ? "Large" : totalPoints > 8 ? "Medium" : "Small";
+            flows.forEach(f => {
+                totalPoints += f.points;
+                
+                // Days per complexity level (Heuristics)
+                if (f.complexity === 'Low') {
+                    f.est = { design: 0.5, dev: 1, test: 0.5 };
+                } else if (f.complexity === 'Medium') {
+                    f.est = { design: 1.5, dev: 3, test: 2 };
+                } else { // High
+                    f.est = { design: 3, dev: 6, test: 4 };
+                }
 
-            return { flows, tests, overallSize, totalPoints };
+                designDays += f.est.design;
+                devDays += f.est.dev;
+                testDays += f.est.test;
+            });
+
+            // Test effort adjustment
+            if (tests.count > 0) testDays += (tests.count * 0.25);
+
+            const totalDays = designDays + devDays + testDays;
+
+            return { 
+                flows, tests, pii, totalPoints, 
+                estimates: { design: designDays, dev: devDays, test: testDays, total: totalDays } 
+            };
         }
 
         function renderReport(data) {
             document.getElementById('reportArea').style.display = "block";
             
-            // Stats
-            document.getElementById('statComplexity').innerText = data.overallSize;
+            // Dashboard Stats
+            document.getElementById('statTotalDays').innerText = data.estimates.total.toFixed(1) + " Days";
+            document.getElementById('statDesign').innerText = data.estimates.design.toFixed(1);
+            document.getElementById('statDev').innerText = data.estimates.dev.toFixed(1);
+            document.getElementById('statTest').innerText = data.estimates.test.toFixed(1);
+            
+            document.getElementById('statMuleScore').innerText = data.totalPoints;
             document.getElementById('statFlows').innerText = data.flows.length;
-            document.getElementById('statTests').innerText = data.tests.count;
-            document.getElementById('statPoints').innerText = data.totalPoints;
+
+            // PII
+            const piiCard = document.getElementById('piiCard');
+            const piiText = document.getElementById('statPII');
+            const piiDet = document.getElementById('statPIIDetails');
+            if (data.pii.length > 0) {
+                piiText.innerText = "High Risk";
+                piiText.style.color = "var(--danger)";
+                piiCard.style.borderLeftColor = "var(--danger)";
+                piiDet.innerText = "Detected: " + data.pii.join(", ");
+            } else {
+                piiText.innerText = "Low Risk";
+                piiText.style.color = "var(--success)";
+                piiCard.style.borderLeftColor = "var(--success)";
+                piiDet.innerText = "No PII keywords";
+            }
 
             // Flows
             const container = document.getElementById('flowContainer');
             container.innerHTML = "";
 
             data.flows.forEach(flow => {
-                let badgeColor = flow.complexity === 'S' ? 'badge-s' : flow.complexity === 'M' ? 'badge-m' : 'badge-l';
-                
+                let badgeColor = flow.complexity === 'Low' ? 'badge-s' : flow.complexity === 'Medium' ? 'badge-m' : 'badge-l';
+                let piiBadge = data.pii.length > 0 ? `<span class="pii-badge">Confidential</span>` : '';
+
                 let html = `
                 <div class="flow-card">
                     <div class="flow-header">
-                        <strong style="font-size:1rem;">${flow.name}</strong>
-                        <span class="badge ${badgeColor}">${flow.complexity}</span>
+                        <div>
+                            <strong style="font-size:1rem;">${flow.name}</strong> ${piiBadge}
+                        </div>
+                        <span class="badge ${badgeColor}">${flow.complexity} (${flow.points} pts)</span>
                     </div>
                     <div class="flow-body">
                         <div class="mapping-col">
@@ -616,97 +759,80 @@ types:
 
         async function showStrategy() {
             if(!globalAssessment) return;
-            
-            // FIX: Show modal FIRST so Mermaid can calculate dimensions
             document.getElementById('strategyModal').style.display = "flex";
-
-            const date = new Date().toLocaleDateString();
-            document.getElementById('reportDate').innerText = date;
+            document.getElementById('reportDate').innerText = new Date().toLocaleDateString();
             
-            // 1. Render MUnit Strategy
-            const testBox = document.getElementById('testStrategyContainer');
-            if (globalAssessment.tests.count > 0) {
-                testBox.innerHTML = `
-                    <div class="test-strategy-box">
-                        <h4 style="margin-top:0; color:#1a73e8;">🧪 Test Automation Strategy</h4>
-                        <p style="font-size:0.9rem; margin-bottom:10px;">Detected <strong>${globalAssessment.tests.count} MUnit test scenarios</strong> with ${globalAssessment.tests.mocks} mocks.</p>
-                        <ul style="font-size:0.9rem; padding-left:20px; margin-bottom:0;">
-                            <li><strong>Recipe Lifecycle Management (RLM):</strong> Utilize Workato RLM to create manifest-based deployments.</li>
-                            <li><strong>Mocking:</strong> Replicate MUnit 'mock-when' behavior by using conditional flags (<code>isTest=true</code>) or mocking endpoints in Workato API Platform.</li>
-                            <li><strong>Validation:</strong> Convert MUnit assertions into Post-Processing recipes that verify output data integrity.</li>
-                        </ul>
-                    </div>
-                `;
-            } else {
-                testBox.innerHTML = "";
-            }
+            // 1. Platform Recommendations (Strategic)
+            const recBox = document.getElementById('platformRecsBox');
+            let recHtml = `<div class="platform-rec-box">
+                <h4 style="margin-top:0; color:#137333;">✅ Workato Platform Recommendations</h4>
+                <ul style="font-size:0.9rem; padding-left:20px; margin-bottom:0;">`;
+            
+            // Dynamic Recs
+            const hasAPI = globalAssessment.flows.some(f => f.components.some(c => c.text.includes("HTTP")));
+            const hasQueue = globalAssessment.flows.some(f => f.components.some(c => c.text.includes("Queue")));
+            const hasScatter = globalAssessment.flows.some(f => f.components.some(c => c.text.includes("Scatter")));
+            
+            if(hasAPI) recHtml += `<li><strong>API Platform:</strong> Utilize Workato API Management for centralized policy enforcement (OAuth, Rate Limiting) and usage analytics.</li>`;
+            if(hasQueue) recHtml += `<li><strong>Pub/Sub:</strong> Replace VM/JMS queues with Workato Pub/Sub topics to decouple triggers from processing logic.</li>`;
+            if(hasScatter) recHtml += `<li><strong>Async Processing:</strong> Heavy logic detected. Use 'Recipe Lifecycle Management' to deploy async worker recipes.</li>`;
+            
+            recHtml += `<li><strong>Workato Copilot:</strong> Accelerate SQL and Formula migration by using Copilot to translate DataWeave scripts.</li>`;
+            recHtml += `</ul></div>`;
+            recBox.innerHTML = recHtml;
 
-            // 2. Generate Mermaid Diagram Logic
+            // 2. PII Warning
+            const piiBox = document.getElementById('modalPIIBox');
+            if (globalAssessment.pii.length > 0) {
+                piiBox.innerHTML = `<div class="pii-warning-box"><h4 style="margin:0; color:var(--danger);">⚠️ Sensitive Data Detected</h4><p style="margin:5px 0 0 0; font-size:0.9rem;">Keywords: <strong>${globalAssessment.pii.join(", ")}</strong>. Enable Workato 'Masked Data' and limit Job History retention.</p></div>`;
+            } else { piiBox.innerHTML = ""; }
+
+            // 3. Estimation Table
+            const estBody = document.getElementById('estimationBody');
+            estBody.innerHTML = "";
+            globalAssessment.flows.forEach(f => {
+                 estBody.innerHTML += `<tr>
+                    <td>${f.name}</td>
+                    <td>${f.points} pts (${f.complexity})</td>
+                    <td>${f.est.design}</td>
+                    <td>${f.est.dev}</td>
+                    <td>${f.est.test}</td>
+                    <td><strong>${(f.est.design + f.est.dev + f.est.test)}</strong></td>
+                 </tr>`;
+            });
+            estBody.innerHTML += `<tr><td>TOTAL</td><td>${globalAssessment.totalPoints} pts</td><td>${globalAssessment.estimates.design.toFixed(1)}</td><td>${globalAssessment.estimates.dev.toFixed(1)}</td><td>${globalAssessment.estimates.test.toFixed(1)}</td><td>${globalAssessment.estimates.total.toFixed(1)} Days</td></tr>`;
+
+            // 4. Test Strategy
+            document.getElementById('testStrategyContainer').innerHTML = `<div class="test-strategy-box"><h4 style="margin-top:0; color:#1a73e8;">🧪 Test Automation Strategy</h4><p style="font-size:0.9rem;">Detected <strong>${globalAssessment.tests.count} MUnit tests</strong>. Strategy: Convert <code>mock-when</code> to Test Flags (isTest=true). Use Workato SDK for unit testing custom connectors.</p></div>`;
+
+            // 5. Diagram
             let mermaidStr = "graph TD;\n";
-            
-            // Add Nodes
-            globalAssessment.flows.forEach((flow, index) => {
-                // FIX: Ensure safe ID that doesn't start with a number
+            globalAssessment.flows.forEach(flow => {
                 const safeName = 'flow_' + flow.name.replace(/[^a-zA-Z0-9]/g, '');
                 mermaidStr += `  ${safeName}[Recipe: ${flow.name}]:::recipe\n`;
-                
-                // Analyze connections based on components
-                if(flow.components.some(c => c.text.includes("HTTP"))) {
-                    mermaidStr += `  Client(External App) -->|API Request| ${safeName}\n`;
-                }
-                if(flow.components.some(c => c.text.includes("Scheduler"))) {
-                    mermaidStr += `  Clock(Scheduler) -.->|Trigger| ${safeName}\n`;
-                }
-                if(flow.components.some(c => c.text.includes("Database"))) {
-                    mermaidStr += `  ${safeName} -->|SQL| DB[(Database)]\n`;
-                }
-                if(flow.components.some(c => c.text.includes("Flow Ref"))) {
-                    mermaidStr += `  ${safeName} -->|Call| SubRecipe(Utility Recipe)\n`;
-                }
-                if(flow.components.some(c => c.text.includes("Salesforce"))) {
-                    mermaidStr += `  ${safeName} -->|Sync| SFDC(Salesforce)\n`;
-                }
+                if(flow.components.some(c => c.text.includes("HTTP"))) mermaidStr += `  Client(External) -->|API| ${safeName}\n`;
+                if(flow.components.some(c => c.text.includes("Database"))) mermaidStr += `  ${safeName} -->|SQL| DB[(Database)]\n`;
+                if(flow.components.some(c => c.text.includes("Scatter"))) mermaidStr += `  ${safeName} -->|Async| Worker(Worker Recipe)\n`;
             });
-            
-            // Add Styling
             mermaidStr += `  classDef recipe fill:#f9f9f9,stroke:#D6001C,stroke-width:2px;\n`;
-
             const graphDiv = document.getElementById('mermaidGraph');
             graphDiv.innerHTML = mermaidStr;
-            graphDiv.removeAttribute('data-processed'); // Reset mermaid
-            
-            try {
-                await mermaid.run({ nodes: [graphDiv] });
-            } catch (err) {
-                console.warn("Mermaid rendering failed:", err);
-                graphDiv.innerHTML = "<p style='color:red; text-align:center; padding:20px;'>Visual generation failed. Please check flow names for special characters.</p>";
-            }
+            graphDiv.removeAttribute('data-processed');
+            try { await mermaid.run({ nodes: [graphDiv] }); } catch (e) {}
 
-            // 3. Populate Table
+            // 6. Recommendations Table
             const tbody = document.getElementById('strategyBody');
             tbody.innerHTML = "";
-
             globalAssessment.flows.forEach(flow => {
                 flow.strategies.forEach(strat => {
                     let riskColor = strat.risk === 'High' ? '#fce8e6' : strat.risk === 'Med' ? '#fef7e0' : '#e6f4ea';
                     let tagsHtml = strat.tags.map(t => `<span class="rec-tag">${t}</span>`).join('');
-                    tbody.innerHTML += `
-                        <tr>
-                            <td><strong>${strat.source}</strong><br><span style="font-size:0.8rem; color:#888;">in ${flow.name}</span></td>
-                            <td>${strat.target}</td>
-                            <td>${tagsHtml}<br>${strat.rec}</td>
-                            <td><span style="background:${riskColor}; padding:2px 6px; border-radius:4px; font-size:0.8rem;">${strat.risk}</span></td>
-                        </tr>
-                    `;
+                    tbody.innerHTML += `<tr><td><strong>${strat.source}</strong><br><span style="font-size:0.8rem; color:#888;">in ${flow.name}</span></td><td>${strat.target}</td><td>${tagsHtml}<br>${strat.rec}</td><td><span style="background:${riskColor}; padding:2px 6px; border-radius:4px; font-size:0.8rem;">${strat.risk}</span></td></tr>`;
                 });
             });
-
-            // Modal is already visible from step 1
         }
 
-        function closeStrategy() {
-            document.getElementById('strategyModal').style.display = "none";
-        }
+        function closeStrategy() { document.getElementById('strategyModal').style.display = "none"; }
     </script>
 </body>
 </html>
