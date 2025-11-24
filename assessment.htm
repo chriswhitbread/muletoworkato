@@ -23,6 +23,7 @@
             --success: #137333;
             --danger: #c5221f;
             --warning: #b06000;
+            --ai-blue: #4285f4;
         }
 
         * { box-sizing: border-box; }
@@ -161,7 +162,7 @@
             border-radius: 12px;
             padding: 25px;
             border: 1px solid var(--border);
-            min-height: 400px;
+            min-height: 200px;
         }
 
         .section-header {
@@ -174,6 +175,8 @@
         }
         
         .section-header h2 { color: var(--ust-black); margin: 0; font-size: 1.8rem; }
+        .section-header h3 { color: var(--ust-black); margin: 0; font-size: 1.5rem; }
+
 
         .flow-card {
             background: #fff;
@@ -273,6 +276,14 @@
         }
         
         /* Boxes */
+        .ai-summary-box {
+            background: #f7f9ff;
+            border-left: 4px solid var(--ai-blue);
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 0 4px 4px 0;
+        }
+        
         .test-strategy-box {
             background: #e8f0fe;
             border-left: 4px solid #4285f4;
@@ -287,6 +298,10 @@
         
         .platform-rec-box {
             background: #f0f9f4; border-left: 4px solid var(--success); padding: 15px; margin-bottom: 20px;
+        }
+        
+        .benefit-box {
+            background: #f0f4ff; border-left: 4px solid var(--ai-blue); padding: 15px; margin-bottom: 20px;
         }
 
     </style>
@@ -421,6 +436,12 @@ types:
             </div>
         </div>
 
+        <!-- AI Summary -->
+        <div class="ai-summary-box">
+            <h4 style="margin-top:0; color:var(--ai-blue);">🤖 AI-Generated Purpose Summary</h4>
+            <p id="aiSummaryText" style="margin:5px 0 0 0; font-size:0.9rem;"></p>
+        </div>
+
         <!-- Technical Analysis -->
         <div class="analysis-section">
             <div class="section-header">
@@ -446,6 +467,15 @@ types:
             </div>
 
             <div class="strategy-content">
+                
+                <!-- AI Summary -->
+                <div class="ai-summary-box">
+                    <h4 style="margin-top:0; color:var(--ai-blue);">🤖 AI-Generated Purpose Summary</h4>
+                    <p id="modalAiSummaryText" style="margin:5px 0 0 0; font-size:0.9rem;"></p>
+                </div>
+                
+                <!-- Workato Benefits -->
+                <div id="workatoBenefitBox"></div>
                 
                 <!-- PII Warning -->
                 <div id="modalPIIBox"></div>
@@ -516,27 +546,51 @@ types:
         // --- PII Detection Logic ---
         const PII_KEYWORDS = ['email', 'ssn', 'socialsecurity', 'creditcard', 'cardnumber', 'dob', 'birth', 'salary', 'password', 'secret', 'token', 'passport'];
 
-        function detectPII(ramlData, xmlText) {
-            const detected = new Set();
+        // --- Simulated AI Content Analysis ---
+        function analyzeContentPurpose(ramlData, xmlText) {
+            let purpose = "";
             
-            // 1. Scan RAML Types
-            if (ramlData && ramlData.types) {
-                JSON.stringify(ramlData.types, (key, value) => {
-                    if (typeof key === 'string') {
-                        PII_KEYWORDS.forEach(k => {
-                            if (key.toLowerCase().includes(k)) detected.add(k);
-                        });
-                    }
-                    return value;
-                });
+            // 1. Identify Subject (from RAML types or XML flow name)
+            let subject = "data payload";
+            if (ramlData && ramlData.title) {
+                subject = ramlData.title.split(' ')[0].replace(/API/i, '');
+            } else if (xmlText.includes("Order")) {
+                subject = "Orders";
             }
 
-            // 2. Scan XML Logic
-            PII_KEYWORDS.forEach(k => {
-                if (xmlText.toLowerCase().includes(k)) detected.add(k);
-            });
+            // 2. Identify Trigger/Source
+            let source = "an unspecified source";
+            if (xmlText.includes("http:listener")) {
+                source = "an external application via an API trigger";
+            } else if (xmlText.includes("scheduler")) {
+                source = "a recurring time schedule";
+            }
 
-            return Array.from(detected);
+            // 3. Identify Destination/Action
+            let destination = "an unknown endpoint";
+            let action = "process the data";
+            
+            if (xmlText.includes("db:insert") || xmlText.includes("SAP")) {
+                destination = "the SAP database";
+                action = "insert individual records";
+            } else if (xmlText.includes("vm:publish") || xmlText.includes("auditLog")) {
+                destination = "an internal queue for auditing/further processing";
+                action = "publish a message";
+            }
+
+            purpose = `This interface is primarily focused on handling <strong>${subject}</strong>. The data is initiated by ${source}, then validated against business rules (e.g., preventing negative totals).`;
+            
+            // 4. Add Complex Logic Detail
+            if (xmlText.includes("scatter-gather")) {
+                purpose += ` It utilizes a complex <strong>Scatter-Gather</strong> pattern to execute multiple processing paths in parallel, such as logging data to a queue and asynchronously inserting records into a database.`;
+            } else {
+                 purpose += ` The main business action is to ${action} into ${destination}.`;
+            }
+            if (xmlText.includes("error-handler")) {
+                purpose += ` Comprehensive <strong>error handling</strong> is in place to manage transaction failures gracefully.`;
+            }
+
+            return purpose;
         }
 
         function analyze() {
@@ -551,13 +605,37 @@ types:
             const flows = extractFlows(xml);
             const piiFound = detectPII(ramlData, xml);
             const testAnalysis = extractMUnits(munit);
+            const contentPurpose = analyzeContentPurpose(ramlData, xml);
 
             // 2. Calculate Metrics
-            const assessment = calculateAssessment(flows, ramlData, testAnalysis, piiFound);
+            const assessment = calculateAssessment(flows, ramlData, testAnalysis, piiFound, contentPurpose);
             globalAssessment = assessment;
 
             // 3. Render
             renderReport(assessment);
+        }
+
+        function detectPII(ramlData, xmlText) {
+            const detected = new Set();
+            
+            // 1. Scan RAML Types
+            if (ramlData && ramlData.types) {
+                JSON.stringify(ramlData.types, (key, value) => {
+                    if (typeof key === 'string') {
+                        PII_KEYWORDS.forEach(k => {
+                            if (key.toLowerCase().includes(k)) detected.add(key);
+                        });
+                    }
+                    return value;
+                });
+            }
+
+            // 2. Scan XML Logic
+            PII_KEYWORDS.forEach(k => {
+                if (xmlText.toLowerCase().includes(k)) detected.add(k);
+            });
+
+            return Array.from(detected);
         }
 
         function extractFlows(xmlText) {
@@ -600,17 +678,17 @@ types:
                     workatoSteps.push({icon: "📝", text: "Formula / SQL"});
                     strategies.push({
                         source: "DataWeave", target: "Formula Mode",
-                        rec: "Convert logic to Workato Formulas. Use SQL Transformation for heavy array joins.",
+                        rec: "Convert logic to Workato Formulas. Use SQL Transformation for heavy array joins. Leverage Copilot for conversion.",
                         tags: ["Transformation"], risk: "Med"
                     });
                     points += 2;
                 }
 
                 // 4. Database
-                if (content.includes("db:") || content.includes("database")) {
-                    components.push({icon: "🗄️", text: "Database"});
-                    workatoSteps.push({icon: "🔌", text: "SQL Connector"});
-                    strategies.push({ source: "DB Connector", target: "JDBC Connector", rec: "Requires On-Prem Agent (OPA) if behind firewall.", tags: ["Connectivity"], risk: "High" });
+                if (content.includes("db:") || content.includes("database") || content.includes("SAP_DB")) {
+                    components.push({icon: "🗄️", text: "Database (SAP)"});
+                    workatoSteps.push({icon: "🔌", text: "SAP / SQL Connector"});
+                    strategies.push({ source: "DB Connector", target: "SAP BAPI/SQL", rec: "Requires On-Prem Agent (OPA) if SAP is behind firewall. Prefer SAP BAPI for structured calls.", tags: ["Connectivity"], risk: "High" });
                     points += 2;
                 }
 
@@ -626,7 +704,7 @@ types:
                 if (content.includes("scatter-gather")) {
                     components.push({icon: "⚡", text: "Scatter-Gather"});
                     workatoSteps.push({icon: "⚡", text: "Parallel / Async"});
-                    strategies.push({ source: "Scatter-Gather", target: "Async Call", rec: "Use 'Call Recipe (Async)' to simulate parallel processing.", tags: ["Advanced"], risk: "High" });
+                    strategies.push({ source: "Scatter-Gather", target: "Async Call", rec: "Use 'Call Recipe (Async)' to simulate parallel processing and isolate failure domains.", tags: ["Advanced", "Resilience"], risk: "High" });
                     points += 5;
                 }
                 if (content.includes("choice")) {
@@ -638,7 +716,7 @@ types:
 
                 // 7. Messaging / Queues
                 if (content.includes("vm:") || content.includes("jms:") || content.includes("anypoint-mq")) {
-                    components.push({icon: "📨", text: "Queue/VM"});
+                    components.push({icon: "📨", text: "Queue/VM (auditLog)"});
                     workatoSteps.push({icon: "📨", text: "Pub/Sub"});
                     strategies.push({ source: "VM/JMS", target: "Pub/Sub", rec: "Replace internal queues with Workato Pub/Sub topics for decoupling.", tags: ["Messaging"], risk: "Med" });
                     points += 3;
@@ -664,7 +742,7 @@ types:
             return { count: testCount };
         }
 
-        function calculateAssessment(flows, raml, tests, pii) {
+        function calculateAssessment(flows, raml, tests, pii, contentPurpose) {
             let totalPoints = 0;
             let designDays = 0;
             let devDays = 0;
@@ -693,7 +771,7 @@ types:
             const totalDays = designDays + devDays + testDays;
 
             return { 
-                flows, tests, pii, totalPoints, 
+                flows, tests, pii, totalPoints, contentPurpose,
                 estimates: { design: designDays, dev: devDays, test: testDays, total: totalDays } 
             };
         }
@@ -709,6 +787,11 @@ types:
             
             document.getElementById('statMuleScore').innerText = data.totalPoints;
             document.getElementById('statFlows').innerText = data.flows.length;
+            
+            // AI Summary
+            document.getElementById('aiSummaryText').innerHTML = data.contentPurpose;
+            document.getElementById('modalAiSummaryText').innerHTML = data.contentPurpose;
+
 
             // PII
             const piiCard = document.getElementById('piiCard');
@@ -757,62 +840,107 @@ types:
             });
         }
 
+        function getWorkatoBenefits(data) {
+             let benefits = [];
+             
+             // 1. API Benefit
+             if (data.flows.some(f => f.components.some(c => c.text.includes("HTTP")))) {
+                 benefits.push(`<strong>Faster API Deployment:</strong> Quickly translate API specs (RAML) into live Workato API endpoints, drastically reducing time-to-market compared to traditional deployment cycles.`);
+             }
+
+             // 2. Resilience/Logging Benefit
+             if (data.flows.some(f => f.components.some(c => c.text.includes("Error Handler")) || c.text.includes("Queue"))) {
+                 benefits.push(`<strong>Enhanced Operational Resilience:</strong> Seamlessly replace VM/JMS queues with Workato's Pub/Sub for native decoupling, and leverage built-in job history and automatic recipe monitoring for superior error tracking.`);
+             }
+
+             // 3. Transformation Benefit
+             if (data.flows.some(f => f.components.some(c => c.text.includes("DataWeave")))) {
+                 benefits.push(`<strong>Simplified Development:</strong> Replace complex DataWeave with Workato's user-friendly formula language and visual mapping tools. Use Workato Copilot to convert legacy transformation scripts with AI assistance.`);
+             }
+
+             // 4. Connectivity Benefit
+             if (data.flows.some(f => f.components.some(c => c.text.includes("Database") || c.text.includes("SAP")))) {
+                 benefits.push(`<strong>Comprehensive Connectivity:</strong> Utilize Workato's native, certified connectors for systems like SAP, reducing the need for custom coding and increasing integration stability.`);
+             }
+             
+             return benefits;
+        }
+
+
         async function showStrategy() {
             if(!globalAssessment) return;
             document.getElementById('strategyModal').style.display = "flex";
             document.getElementById('reportDate').innerText = new Date().toLocaleDateString();
             
-            // 1. Platform Recommendations (Strategic)
+            const data = globalAssessment;
+
+            // 1. Workato Benefits
+            const benefitBox = document.getElementById('workatoBenefitBox');
+            const benefits = getWorkatoBenefits(data);
+            let benefitHtml = `<div class="benefit-box">
+                <h4 style="margin-top:0; color:var(--ai-blue);">🌟 Key Benefits of Workato Migration</h4>
+                <ul style="font-size:0.9rem; padding-left:20px; margin-bottom:0;">
+                ${benefits.map(b => `<li>${b}</li>`).join('')}
+                </ul>
+            </div>`;
+            benefitBox.innerHTML = benefitHtml;
+
+
+            // 2. Platform Recommendations (Strategic)
             const recBox = document.getElementById('platformRecsBox');
             let recHtml = `<div class="platform-rec-box">
                 <h4 style="margin-top:0; color:#137333;">✅ Workato Platform Recommendations</h4>
                 <ul style="font-size:0.9rem; padding-left:20px; margin-bottom:0;">`;
             
             // Dynamic Recs
-            const hasAPI = globalAssessment.flows.some(f => f.components.some(c => c.text.includes("HTTP")));
-            const hasQueue = globalAssessment.flows.some(f => f.components.some(c => c.text.includes("Queue")));
-            const hasScatter = globalAssessment.flows.some(f => f.components.some(c => c.text.includes("Scatter")));
+            const hasAPI = data.flows.some(f => f.components.some(c => c.text.includes("HTTP")));
+            const hasQueue = data.flows.some(f => f.components.some(c => c.text.includes("Queue")));
+            const hasScatter = data.flows.some(f => f.components.some(c => c.text.includes("Scatter")));
             
             if(hasAPI) recHtml += `<li><strong>API Platform:</strong> Utilize Workato API Management for centralized policy enforcement (OAuth, Rate Limiting) and usage analytics.</li>`;
             if(hasQueue) recHtml += `<li><strong>Pub/Sub:</strong> Replace VM/JMS queues with Workato Pub/Sub topics to decouple triggers from processing logic.</li>`;
-            if(hasScatter) recHtml += `<li><strong>Async Processing:</strong> Heavy logic detected. Use 'Recipe Lifecycle Management' to deploy async worker recipes.</li>`;
+            if(hasScatter) recHtml += `<li><strong>Async Processing:</strong> Complex parallel logic detected. Use 'Call Recipe (Async)' with error handling for non-blocking execution.</li>`;
             
+            recHtml += `<li><strong>Recipe Lifecycle Management (RLM):</strong> Implement RLM for promotion of recipes from Dev to QA to Production environments.</li>`;
             recHtml += `<li><strong>Workato Copilot:</strong> Accelerate SQL and Formula migration by using Copilot to translate DataWeave scripts.</li>`;
             recHtml += `</ul></div>`;
             recBox.innerHTML = recHtml;
 
-            // 2. PII Warning
+            // 3. PII Warning
             const piiBox = document.getElementById('modalPIIBox');
-            if (globalAssessment.pii.length > 0) {
-                piiBox.innerHTML = `<div class="pii-warning-box"><h4 style="margin:0; color:var(--danger);">⚠️ Sensitive Data Detected</h4><p style="margin:5px 0 0 0; font-size:0.9rem;">Keywords: <strong>${globalAssessment.pii.join(", ")}</strong>. Enable Workato 'Masked Data' and limit Job History retention.</p></div>`;
+            if (data.pii.length > 0) {
+                piiBox.innerHTML = `<div class="pii-warning-box"><h4 style="margin:0; color:var(--danger);">⚠️ Sensitive Data Detected</h4><p style="margin:5px 0 0 0; font-size:0.9rem;">Keywords: <strong>${data.pii.join(", ")}</strong>. Enable Workato 'Masked Data' controls and limit Job History retention as per data privacy compliance requirements.</p></div>`;
             } else { piiBox.innerHTML = ""; }
 
-            // 3. Estimation Table
+            // 4. Estimation Table
             const estBody = document.getElementById('estimationBody');
             estBody.innerHTML = "";
-            globalAssessment.flows.forEach(f => {
+            data.flows.forEach(f => {
                  estBody.innerHTML += `<tr>
                     <td>${f.name}</td>
                     <td>${f.points} pts (${f.complexity})</td>
                     <td>${f.est.design}</td>
                     <td>${f.est.dev}</td>
                     <td>${f.est.test}</td>
-                    <td><strong>${(f.est.design + f.est.dev + f.est.test)}</strong></td>
+                    <td><strong>${(f.est.design + f.est.dev + f.est.test).toFixed(1)}</strong></td>
                  </tr>`;
             });
-            estBody.innerHTML += `<tr><td>TOTAL</td><td>${globalAssessment.totalPoints} pts</td><td>${globalAssessment.estimates.design.toFixed(1)}</td><td>${globalAssessment.estimates.dev.toFixed(1)}</td><td>${globalAssessment.estimates.test.toFixed(1)}</td><td>${globalAssessment.estimates.total.toFixed(1)} Days</td></tr>`;
+            estBody.innerHTML += `<tr><td>TOTAL</td><td>${data.totalPoints} pts</td><td>${data.estimates.design.toFixed(1)}</td><td>${data.estimates.dev.toFixed(1)}</td><td>${data.estimates.test.toFixed(1)}</td><td>${data.estimates.total.toFixed(1)} Days</td></tr>`;
 
-            // 4. Test Strategy
-            document.getElementById('testStrategyContainer').innerHTML = `<div class="test-strategy-box"><h4 style="margin-top:0; color:#1a73e8;">🧪 Test Automation Strategy</h4><p style="font-size:0.9rem;">Detected <strong>${globalAssessment.tests.count} MUnit tests</strong>. Strategy: Convert <code>mock-when</code> to Test Flags (isTest=true). Use Workato SDK for unit testing custom connectors.</p></div>`;
+            // 5. Test Strategy
+            const testStrategyContainer = document.getElementById('testStrategyContainer');
+            testStrategyContainer.innerHTML = `<div class="test-strategy-box"><h4 style="margin-top:0; color:#1a73e8;">🧪 Testing Requirements & Strategy</h4><p style="font-size:0.9rem;">
+            Detected <strong>${data.tests.count} MUnit test(s)</strong>. The migration strategy requires converting these into Workato Unit Tests using recipe-level test variables (e.g., setting a 'is_test' flag) and utilizing the <strong>Test Recipe</strong> feature. For complex validation logic like the 'validateOrder' flow, the new Workato recipe must be called directly within a test harness to verify expected success/failure states.
+            </p></div>`;
 
-            // 5. Diagram
+            // 6. Diagram
             let mermaidStr = "graph TD;\n";
-            globalAssessment.flows.forEach(flow => {
+            data.flows.forEach(flow => {
                 const safeName = 'flow_' + flow.name.replace(/[^a-zA-Z0-9]/g, '');
                 mermaidStr += `  ${safeName}[Recipe: ${flow.name}]:::recipe\n`;
-                if(flow.components.some(c => c.text.includes("HTTP"))) mermaidStr += `  Client(External) -->|API| ${safeName}\n`;
-                if(flow.components.some(c => c.text.includes("Database"))) mermaidStr += `  ${safeName} -->|SQL| DB[(Database)]\n`;
-                if(flow.components.some(c => c.text.includes("Scatter"))) mermaidStr += `  ${safeName} -->|Async| Worker(Worker Recipe)\n`;
+                if(flow.components.some(c => c.text.includes("HTTP"))) mermaidStr += `  Client(External System) -->|API Call| ${safeName}\n`;
+                if(flow.components.some(c => c.text.includes("Database"))) mermaidStr += `  ${safeName} -->|SQL/BAPI| DB[(SAP Database)]\n`;
+                if(flow.components.some(c => c.text.includes("Scatter"))) mermaidStr += `  ${safeName} -->|Async Call| Worker(Audit Worker Recipe)\n`;
             });
             mermaidStr += `  classDef recipe fill:#f9f9f9,stroke:#D6001C,stroke-width:2px;\n`;
             const graphDiv = document.getElementById('mermaidGraph');
@@ -820,10 +948,10 @@ types:
             graphDiv.removeAttribute('data-processed');
             try { await mermaid.run({ nodes: [graphDiv] }); } catch (e) {}
 
-            // 6. Recommendations Table
+            // 7. Recommendations Table
             const tbody = document.getElementById('strategyBody');
             tbody.innerHTML = "";
-            globalAssessment.flows.forEach(flow => {
+            data.flows.forEach(flow => {
                 flow.strategies.forEach(strat => {
                     let riskColor = strat.risk === 'High' ? '#fce8e6' : strat.risk === 'Med' ? '#fef7e0' : '#e6f4ea';
                     let tagsHtml = strat.tags.map(t => `<span class="rec-tag">${t}</span>`).join('');
